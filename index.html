@@ -111,6 +111,7 @@ tr.done td input{text-decoration:line-through;color:var(--mute)}
  <div class="card" id="hcard" hidden>
   <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
   <div id="hist"></div>
+  <div id="arch"></div>
  </div>
 </section>
 
@@ -125,15 +126,23 @@ tr.done td input{text-decoration:line-through;color:var(--mute)}
   <div class="card"><div class="lab">Épargne</div><input id="epa" type="number" inputmode="decimal" aria-label="Épargne"></div>
  </div>
  <div class="acts"><button class="sv" id="save">Sauvegarder</button><button class="rs" id="reset">Reset</button></div>
+ <div class="acts" style="margin-top:12px"><button id="exp" style="background:var(--card);color:var(--ink);font-size:16px">Exporter</button><button id="imp" style="background:var(--card);color:var(--ink);font-size:16px">Importer</button></div>
+ <input type="file" id="file" accept="application/json,.json" hidden>
  <div class="ok" id="ok"></div>
 </section>
 </div>
 <script>
 const KEY="monezia-v1";
 const def={capital:1764,epargne:250,charges:[[1,"Coiffeur",25],[3,"Virement",470],[4,"Apple Music",17],[5,"Assurance Auto",115],[5,"Mutuelle",55],[6,"Plein",200],[8,"Apple stockage",3],[10,"Forfait ligne perso / ligne pro",12],[10,"Crédit Voiture",0],[16,"Banque",12],[28,"Netflix",8],[30,"Suno",10]].map(c=>({d:c[0],n:c[1],a:c[2],done:false})),dep:[]};
-let S;
-try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!S)S=JSON.parse(JSON.stringify(def));
+function norm(s){
+ const d=JSON.parse(JSON.stringify(def));
+ if(!s||typeof s!=="object")return Object.assign(d,{archive:[]});
+ const n=(v,f)=>isNaN(parseFloat(v))?f:parseFloat(v);
+ return{capital:n(s.capital,d.capital),epargne:n(s.epargne,d.epargne),charges:Array.isArray(s.charges)?s.charges:d.charges,dep:Array.isArray(s.dep)?s.dep:[],archive:Array.isArray(s.archive)?s.archive:[]};
+}
+function load(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}return norm(s)}
+let S=load();
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 let type="panier";
 const $=id=>document.getElementById(id);
 const eur=n=>(Math.round(n*100)/100).toLocaleString("fr-FR")+" €";
@@ -156,6 +165,7 @@ function render(){
  $("tb").innerHTML=S.charges.map((c,i)=>`<tr class="${c.done?"done":""}"><td style="width:48px"><input data-i="${i}" data-f="d" type="number" value="${c.d}"></td><td><input data-i="${i}" data-f="n" value="${esc(c.n)}"></td><td style="width:78px"><input data-i="${i}" data-f="a" type="number" value="${c.a}"></td><td class="c"><input type="checkbox" data-i="${i}" data-f="done" ${c.done?"checked":""} aria-label="Payée"></td><td class="c"><button class="x" data-del="${i}" aria-label="Supprimer">×</button></td></tr>`).join("");
  const L={panier:"Panier",coiffeur:"Coiffeur",essence:"Essence"};
  $("hist").innerHTML=S.dep.length?S.dep.slice().reverse().map(d=>`<div class="row"><div>${L[d.type]}<small>${d.date}${d.type==="coiffeur"?" · charge fixe cochée, non déduite":""}</small></div><div>${d.type==="coiffeur"?"":"−"}${eur(d.a)}<button class="x" data-rm="${d.id}" aria-label="Supprimer">×</button></div></div>`).join(""):'<p style="color:var(--mute);font-weight:500;font-size:14px">Aucune dépense pour l’instant. Ajoute la première ci-dessus.</p>';
+ $("arch").innerHTML=S.archive.length?'<h2 style="margin:18px 0 6px">Mois précédents</h2>'+S.archive.slice().reverse().map(m=>`<div class="row"><div>${esc(m.label)}<small>${m.n} dépense${m.n>1?"s":""}</small></div><div style="text-align:right">−${eur(m.spent)}<small>sur ${eur(m.base)}</small></div></div>`).join(""):"";
  hint();
 }
 function hint(){
@@ -184,7 +194,12 @@ $("cap").onchange=e=>{S.capital=parseFloat(e.target.value)||0;save();render()};
 $("epa").onchange=e=>{S.epargne=parseFloat(e.target.value)||0;save();render()};
 $("save").onclick=()=>{save();$("ok").textContent="Enregistré ✓";setTimeout(()=>$("ok").textContent="",2000)};
 $("reset").onclick=()=>{if(!$("reset").dataset.s){$("reset").dataset.s=1;$("reset").textContent="Confirmer ?";setTimeout(()=>{delete $("reset").dataset.s;$("reset").textContent="Reset"},3000);return}
- S.dep=[];S.charges.forEach(c=>c.done=false);delete $("reset").dataset.s;$("reset").textContent="Reset";save();render();$("ok").textContent="Dépenses remises à zéro ✓";setTimeout(()=>$("ok").textContent="",2500)};
+ if(S.dep.length)S.archive.push({label:new Date(S.dep[0].id).toLocaleDateString("fr-FR",{month:"long",year:"numeric"}),base:base(),spent:spent(),n:S.dep.length,dep:S.dep});S.dep=[];S.charges.forEach(c=>c.done=false);delete $("reset").dataset.s;$("reset").textContent="Reset";save();render();$("ok").textContent="Mois archivé, compteur remis à zéro ✓";setTimeout(()=>$("ok").textContent="",2500)};
+$("exp").onclick=()=>{const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="monezia-sauvegarde-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$("ok").textContent="Sauvegarde exportée ✓";setTimeout(()=>$("ok").textContent="",2500)};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{S=norm(JSON.parse(r.result));save();render();$("ok").textContent="Sauvegarde importée ✓"}catch(x){$("ok").textContent="Fichier invalide"}setTimeout(()=>$("ok").textContent="",2500)};r.readAsText(f);e.target.value=""};
+addEventListener("pagehide",save);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)save()});
 render();
 </script>
 </body>
