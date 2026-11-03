@@ -122,9 +122,9 @@ header{padding:0 8px 6px}
  .tab{height:42px;font-size:16px}
  .tabs{margin-bottom:12px}
  .card{padding:16px;margin-bottom:12px}
- #dep>.card:first-child{padding:14px 16px 12px}
- #dep>.card:first-child h2{font-size:17px}
- .gauge svg{max-width:170px}
+ #dep>.card:first-child{padding:10px 16px 8px}
+ #dep>.card:first-child h2{font-size:16px;margin:0}
+ .gauge svg{max-width:130px}
  .gauge .s{font-size:14px}.gauge .s b{font-size:22px}
  .card.m h2{font-size:18px}
  .hico svg{width:30px;height:30px}
@@ -145,8 +145,6 @@ header{padding:0 8px 6px}
 /* --- Montant + clavier fusionnés en un seul bloc --- */
 .dock .card.m{background:none;box-shadow:none;border-radius:0;padding:0 0 8px;margin:0;min-height:138px}
 @media (min-height:760px){.dock .card.m{min-height:156px}}
-#dep>.card:first-child{flex:1;display:flex;flex-direction:column}
-#dep>.card:first-child .gauge{flex:1;align-items:center}
 
 /* --- bloc du bas : même largeur que la carte Aujourd'hui, historique à la place de Montant --- */
 .dock{left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px);max-width:436px;margin:0 auto;border-radius:24px;box-shadow:var(--sh);padding:12px 14px}
