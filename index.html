@@ -81,6 +81,34 @@ tr.done td input{text-decoration:line-through;color:var(--mute)}
 .pill svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .pill i{width:2px;height:24px;background:var(--g1);opacity:.6;border-radius:2px}
 [hidden]{display:none!important}
+
+/* --- compact smartphone --- */
+.app{padding:10px 12px 20px}
+header{padding:0 8px 6px}
+.logo{font-size:28px}
+.pill{padding:8px 14px}.pill svg{width:20px;height:20px}.pill i{height:20px}
+.tabs{gap:10px;margin-bottom:8px}
+.tab{height:36px;font-size:15px;border-radius:14px}
+.card{padding:14px;margin-bottom:10px;border-radius:24px}
+#dep>.card:first-child{padding:10px 14px 8px}
+#dep>.card:first-child h2{font-size:15px;margin:0 0 2px}
+.gauge .s{font-size:13px;min-width:62px}
+.gauge .s b{font-size:19px}
+.gauge svg{max-width:120px}
+.card.m{padding-bottom:6px}
+.card.m h2{font-size:16px;margin:0}
+.hico{top:10px;left:12px}.hico svg{width:26px;height:26px}
+.types{top:34px;right:14px;gap:5px}
+.ty{width:38px;height:38px;border-radius:13px}
+.ty svg{width:19px;height:19px}
+.amt{min-height:120px;padding-right:58px;padding-left:20px}
+.amt input,.amt span{font-size:38px}
+.amt input{width:130px}
+.hint{font-size:12.5px;min-height:18px}
+.dock{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:460px;background:var(--card);border-radius:26px 26px 0 0;box-shadow:0 -8px 28px rgba(30,40,60,.10);padding:10px 14px calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
+.dock .keys{gap:7px;margin:0 0 8px}
+.dock .k{height:40px;font-size:20px;border-radius:14px}
+.dock .go{width:100%;height:42px;margin:0;border-radius:16px;font-size:18px}
 </style>
 </head>
 <body>
@@ -106,14 +134,17 @@ tr.done td input{text-decoration:line-through;color:var(--mute)}
   </div>
   <div class="amt"><input id="amt" type="text" inputmode="none" readonly placeholder="0" aria-label="Montant en euros"><span>€</span></div>
   <div class="hint" id="hint"></div>
-  <div class="keys"><button class="k" data-k="1">1</button><button class="k" data-k="2">2</button><button class="k" data-k="3">3</button><button class="k" data-k="4">4</button><button class="k" data-k="5">5</button><button class="k" data-k="6">6</button><button class="k" data-k="7">7</button><button class="k" data-k="8">8</button><button class="k" data-k="9">9</button><button class="k" data-k=",">,</button><button class="k" data-k="0">0</button><button class="k" data-k="b" aria-label="Effacer">⌫</button></div>
-  <button class="go" id="go">Ajouter</button>
+
  </div>
  <div class="card" id="hcard" hidden>
   <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
   <div id="hist"></div>
   <div id="arch"></div>
  </div>
+<div class="dock">
+<div class="keys"><button class="k" data-k="1">1</button><button class="k" data-k="2">2</button><button class="k" data-k="3">3</button><button class="k" data-k="4">4</button><button class="k" data-k="5">5</button><button class="k" data-k="6">6</button><button class="k" data-k="7">7</button><button class="k" data-k="8">8</button><button class="k" data-k="9">9</button><button class="k" data-k=",">,</button><button class="k" data-k="0">0</button><button class="k" data-k="b" aria-label="Effacer">⌫</button></div>
+  <button class="go" id="go">Ajouter</button>
+</div>
 </section>
 
 <section id="fix" hidden>
@@ -176,8 +207,9 @@ function hint(){
  else h.innerHTML=`Déduit du budget · reste <b>${eur(reste()-v)}</b>`;
 }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));$("dep").hidden=t.dataset.t!=="dep";$("fix").hidden=t.dataset.t!=="fix"});
-function movePtr(){const b=[...document.querySelectorAll(".ty")],n=b.length,sel=Math.max(0,b.findIndex(x=>x.classList.contains("on")));b.forEach((x,i)=>{const slot=((i-sel+1)%n+n)%n;x.style.transform="translateY("+(slot-i)*60+"px)"})}
-movePtr();
+function movePtr(){const b=[...document.querySelectorAll(".ty")],n=b.length;if(n<2)return;const st=b[1].offsetTop-b[0].offsetTop,sel=Math.max(0,b.findIndex(x=>x.classList.contains("on")));b.forEach((x,i)=>{const slot=((i-sel+1)%n+n)%n;x.style.transform="translateY("+(slot-i)*st+"px)"});$("ptr").style.top=(st+b[0].offsetHeight/2-7)+"px"}
+movePtr();addEventListener("load",movePtr);addEventListener("resize",movePtr);
+(function(){const d=document.querySelector(".dock"),a=document.querySelector(".app"),f=()=>a.style.paddingBottom=(d.offsetHeight+16)+"px";f();if(window.ResizeObserver)new ResizeObserver(f).observe(d);addEventListener("resize",f)})();
 document.querySelectorAll(".ty").forEach(t=>t.onclick=()=>{type=t.dataset.ty;document.querySelectorAll(".ty").forEach(x=>x.classList.toggle("on",x===t));movePtr();hint()});
 document.querySelectorAll(".k").forEach(k=>k.onclick=()=>{const a=$("amt");let v=a.value;const d=k.dataset.k;if(d==="b")v=v.slice(0,-1);else if(d===","){if(v&&!v.includes("."))v+="."}else if(v.length<7)v+=d;a.value=v;hint()});
 $("go").onclick=()=>{
