@@ -70,7 +70,8 @@ tr.done td input{text-decoration:line-through;color:var(--mute)}
 .ty{width:50px;height:50px;padding:0;font-size:0;border-radius:18px;position:relative;display:flex;align-items:center;justify-content:center}
 .ty svg{margin:0;width:24px;height:24px}
 .ty.on{border-color:transparent}
-.ptr{position:absolute;left:-20px;top:0;width:0;height:0;border:7px solid transparent;border-left:11px solid var(--g1);border-right:0;pointer-events:none;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.ptr{position:absolute;left:-20px;top:78px;width:0;height:0;border:7px solid transparent;border-left:11px solid var(--g1);border-right:0;pointer-events:none}
+.ty{transition:transform .4s cubic-bezier(.3,1.3,.5,1)}
 .amt{min-height:170px;margin:0;padding-right:70px;padding-left:40px}
 .amt input{width:120px;cursor:default}
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 4px}
@@ -175,7 +176,8 @@ function hint(){
  else h.innerHTML=`Déduit du budget · reste <b>${eur(reste()-v)}</b>`;
 }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));$("dep").hidden=t.dataset.t!=="dep";$("fix").hidden=t.dataset.t!=="fix"});
-function movePtr(){const t=document.querySelector(".ty.on");if(t)$("ptr").style.transform="translateY("+(t.offsetTop+t.offsetHeight/2-7)+"px)"}
+function movePtr(){const b=[...document.querySelectorAll(".ty")],n=b.length,sel=Math.max(0,b.findIndex(x=>x.classList.contains("on")));b.forEach((x,i)=>{const slot=((i-sel+1)%n+n)%n;x.style.transform="translateY("+(slot-i)*60+"px)"})}
+movePtr();
 document.querySelectorAll(".ty").forEach(t=>t.onclick=()=>{type=t.dataset.ty;document.querySelectorAll(".ty").forEach(x=>x.classList.toggle("on",x===t));movePtr();hint()});
 document.querySelectorAll(".k").forEach(k=>k.onclick=()=>{const a=$("amt");let v=a.value;const d=k.dataset.k;if(d==="b")v=v.slice(0,-1);else if(d===","){if(v&&!v.includes("."))v+="."}else if(v.length<7)v+=d;a.value=v;hint()});
 $("go").onclick=()=>{
@@ -200,7 +202,7 @@ $("exp").onclick=()=>{const b=new Blob([JSON.stringify(S,null,1)],{type:"applica
 $("imp").onclick=()=>$("file").click();
 $("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{S=norm(JSON.parse(r.result));save();render();$("ok").textContent="Sauvegarde importée ✓"}catch(x){$("ok").textContent="Fichier invalide"}setTimeout(()=>$("ok").textContent="",2500)};r.readAsText(f);e.target.value=""};
 addEventListener("pagehide",save);
-addEventListener("load",movePtr);addEventListener("resize",movePtr);
+
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save()});
 render();
 </script>
