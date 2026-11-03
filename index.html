@@ -109,6 +109,35 @@ header{padding:0 8px 6px}
 .dock .keys{gap:7px;margin:0 0 8px}
 .dock .k{height:40px;font-size:20px;border-radius:14px}
 .dock .go{width:100%;height:42px;margin:0;border-radius:16px;font-size:18px}
+
+/* --- grands smartphones (iPhone Pro Max...) : la carte Montant remplit l'écran --- */
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+#dep:not([hidden]){flex:1;display:flex;flex-direction:column}
+.card.m{flex:1;display:flex;flex-direction:column}
+.card.m .amt{flex:1}
+.types{top:50%;transform:translateY(-50%)}
+@media (min-height:760px){
+ header{padding:4px 8px 10px}.logo{font-size:32px}
+ .tab{height:42px;font-size:16px}
+ .tabs{margin-bottom:12px}
+ .card{padding:16px;margin-bottom:12px}
+ #dep>.card:first-child{padding:14px 16px 12px}
+ #dep>.card:first-child h2{font-size:17px}
+ .gauge svg{max-width:170px}
+ .gauge .s{font-size:14px}.gauge .s b{font-size:22px}
+ .card.m h2{font-size:18px}
+ .hico svg{width:30px;height:30px}
+ .ty{width:46px;height:46px;border-radius:16px}.ty svg{width:23px;height:23px}
+ .types{gap:8px;right:16px}
+ .amt{padding-right:68px}
+ .amt input,.amt span{font-size:52px}
+ .amt input{width:150px}
+ .hint{font-size:14px}
+ .dock{padding:14px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+ .dock .keys{gap:10px;margin-bottom:12px}
+ .dock .k{height:54px;font-size:23px;border-radius:16px}
+ .dock .go{height:54px;font-size:20px}
+}
 </style>
 </head>
 <body>
