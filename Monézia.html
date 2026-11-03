@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monézia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,500;0,600;0,700;1,600;1,700&display=swap">
+<style>
+:root{--bg:#f2f3f5;--card:#fff;--ink:#2d2226;--mute:#9aa3ad;--g1:#7ed957;--g2:#c9e265;--red:#ff5757;--orange:#f59e0b;--line:#e3e6ea;--soft:#f2f3f5;--sh:0 10px 30px rgba(30,40,60,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181b;--card:#1f2327;--ink:#f1eef0;--mute:#7d8791;--line:#2f353b;--soft:#15181b;--sh:none}}
+:root[data-theme="dark"]{--bg:#15181b;--card:#1f2327;--ink:#f1eef0;--mute:#7d8791;--line:#2f353b;--soft:#15181b;--sh:none}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,sans-serif;font-weight:600}
+.app{max-width:460px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px 18px}
+.logo{font-size:34px;font-style:italic;font-weight:700;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo small{font-size:13px;color:#2a2a8f;-webkit-text-fill-color:#2a2a8f;font-weight:500}
+.tabs{display:flex;gap:12px;margin-bottom:16px}
+.tab{flex:1;border:0;border-radius:20px;height:48px;font:700 18px Poppins,sans-serif;background:var(--card);color:var(--g1);cursor:pointer}
+.tab.on{background:linear-gradient(90deg,var(--g1),var(--g2));color:#fff}
+.card{background:var(--card);border-radius:28px;padding:20px;margin-bottom:16px;box-shadow:var(--sh)}
+h2{margin:0 0 6px;font-size:20px}
+.gauge{display:flex;align-items:flex-end;justify-content:space-between;gap:4px}
+.gauge .s{text-align:center;font-size:18px;line-height:1.3;min-width:78px}
+.gauge .s b{display:block;font-size:26px;font-style:italic}
+.gauge svg{width:100%;max-width:210px;flex:1}
+#needle{transform-origin:120px 120px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+#arc{transition:stroke-dashoffset .6s,stroke .3s}
+.types{display:flex;gap:10px;justify-content:center;margin:10px 0}
+.ty{width:74px;border:2px solid transparent;background:var(--soft);border-radius:18px;padding:10px 4px;font:600 12px Poppins,sans-serif;color:var(--ink);cursor:pointer;text-align:center}
+.ty svg{display:block;margin:0 auto 4px;width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ty.on{border-color:var(--g1)}
+.amt{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 4px}
+.amt input{width:150px;border:0;border-bottom:3px solid var(--ink);background:transparent;color:var(--ink);font:700 42px Poppins,sans-serif;text-align:right;padding:0 4px;outline:none}
+.amt span{font:700 42px Poppins}
+.hint{text-align:center;min-height:24px;color:var(--mute);font-size:14px}
+.hint b{color:var(--ink)}
+.go{display:block;margin:12px auto 0;width:220px;height:52px;border:0;border-radius:20px;background:linear-gradient(90deg,var(--g1),var(--g2));color:#fff;font:700 20px Poppins,sans-serif;cursor:pointer}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.row small{color:var(--mute);font-weight:500;display:block}
+.x{border:0;background:none;color:var(--mute);font-size:20px;cursor:pointer;padding:4px 8px}
+.link{border:0;background:none;color:var(--ink);font:600 14px Poppins;cursor:pointer;display:flex;align-items:center;gap:6px;margin:0 0 0 auto}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font:500 14px Poppins,sans-serif}
+th,td{border:1px solid var(--line);padding:2px 4px;text-align:left}
+td input{width:100%;border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 4px;min-width:40px}
+td.c{text-align:center;width:34px}
+tr.done td input{text-decoration:line-through;color:var(--mute)}
+.add{width:100%;margin-top:14px;border:0;border-radius:16px;height:46px;background:var(--soft);color:var(--g1);font:700 16px Poppins,sans-serif;cursor:pointer}
+.two{display:flex;gap:14px}
+.two .card{flex:1;padding:16px;margin-bottom:14px}
+.two .lab{font:italic 700 18px Poppins;color:var(--g1)}
+.two input{width:100%;border:0;background:transparent;color:var(--ink);font:italic 700 34px Poppins;padding:8px 0 0;outline:none;min-width:0}
+.acts{display:flex;gap:14px}
+.acts button{flex:1;height:52px;border:0;border-radius:20px;color:#fff;font:700 20px Poppins;cursor:pointer}
+.sv{background:linear-gradient(90deg,var(--g1),var(--g2))}.rs{background:var(--red)}
+.ok{text-align:center;color:var(--g1);min-height:22px;margin-top:10px;font-size:14px}
+.tot{display:flex;justify-content:space-between;margin-top:10px;font-size:14px;color:var(--mute)}
+.card.m{position:relative;padding-bottom:22px}
+.hico{position:absolute;top:16px;left:16px;border:0;background:none;color:var(--ink);cursor:pointer;padding:4px}
+.hico svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.types{position:absolute;right:16px;top:58px;flex-direction:column;gap:10px;margin:0}
+.ty{width:50px;height:50px;padding:0;font-size:0;border-radius:18px;position:relative;display:flex;align-items:center;justify-content:center}
+.ty svg{margin:0;width:24px;height:24px}
+.ty.on{border-color:transparent}
+.ty.on::before{content:"";position:absolute;left:-20px;border:7px solid transparent;border-left:11px solid var(--g1);border-right:0}
+.amt{min-height:170px;margin:0;padding-right:70px;padding-left:40px}
+.amt input{width:120px;cursor:default}
+.last{position:absolute;left:22px;top:128px;font:italic 700 20px Poppins;color:var(--mute)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 4px}
+.k{height:54px;border:2px solid var(--line);border-radius:18px;background:var(--soft);color:var(--mute);font:700 22px Poppins,sans-serif;cursor:pointer}
+.k:active{background:var(--line)}
+.pill{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:999px;padding:12px 18px;box-shadow:var(--sh);color:var(--ink)}
+.pill svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.pill i{width:2px;height:24px;background:var(--g1);opacity:.6;border-radius:2px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">Monézia <small>1.0</small></div><div class="pill" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6v12M10 3v18M15 8v10M20 11v5"/></svg><i></i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.6" style="stroke-width:3.4;stroke-dasharray:3.7 3.76;stroke-linecap:butt"/><circle cx="12" cy="12" r="7.6" style="fill:currentColor;stroke:none"/><circle cx="12" cy="12" r="3" style="fill:var(--card);stroke:none"/></svg></div></header>
+<div class="tabs"><button class="tab on" data-t="dep">Dépenses</button><button class="tab" data-t="fix">Charges fixes</button></div>
+
+<section id="dep">
+ <div class="card">
+  <h2>Aujourd’hui</h2>
+  <div class="gauge">
+   <div class="s">Reste<b id="reste" style="color:var(--orange)">0 €</b></div>
+   <svg viewBox="0 0 240 135"><path d="M20 120A100 100 0 0 1 220 120" fill="none" stroke="var(--soft)" stroke-width="40"/><path id="arc" d="M20 120A100 100 0 0 1 220 120" fill="none" stroke="#7ed957" stroke-width="40" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/><g id="needle"><path d="M114 122L120 28L126 122Z" fill="var(--ink)" opacity=".85"/><circle cx="120" cy="120" r="9" fill="var(--ink)"/></g></svg>
+   <div class="s">Base<b id="base" style="color:#7ed957">0 €</b></div>
+  </div>
+ </div>
+ <div class="card m">
+  <h2 style="text-align:center">Montant</h2><button class="hico" id="hico" aria-label="Historique"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg></button>
+  <div class="types">
+   <button class="ty on" data-ty="panier"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Panier</button>
+   <button class="ty" data-ty="coiffeur"><svg viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8 8.5L21 17M8 15.5L21 7"/></svg>Coiffeur</button>
+   <button class="ty" data-ty="essence"><svg viewBox="0 0 24 24"><path d="M5 20V5h9v15M3 20h13M14 9h3l2 2v7a1.5 1.5 0 0 1-3 0v-3"/></svg>Essence</button>
+  </div>
+  <div class="amt"><span class="last" id="last"></span><input id="amt" type="text" inputmode="none" readonly placeholder="0" aria-label="Montant en euros"><span>€</span></div>
+  <div class="hint" id="hint"></div>
+  <div class="keys"><button class="k" data-k="1">1</button><button class="k" data-k="2">2</button><button class="k" data-k="3">3</button><button class="k" data-k="4">4</button><button class="k" data-k="5">5</button><button class="k" data-k="6">6</button><button class="k" data-k="7">7</button><button class="k" data-k="8">8</button><button class="k" data-k="9">9</button><button class="k" data-k=",">,</button><button class="k" data-k="0">0</button><button class="k" data-k="b" aria-label="Effacer">⌫</button></div>
+  <button class="go" id="go">Ajouter</button>
+ </div>
+ <div class="card" id="hcard" hidden>
+  <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
+  <div id="hist"></div>
+ </div>
+</section>
+
+<section id="fix" hidden>
+ <div class="card">
+  <div class="scroll"><table><thead><tr><th>Jour</th><th>Nom</th><th>Montant</th><th>✓</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+  <div class="tot"><span>Total des charges</span><b id="tot" style="color:var(--ink)"></b></div>
+  <button class="add" id="addc">+ Ajouter une charge fixe</button>
+ </div>
+ <div class="two">
+  <div class="card"><div class="lab">Capital mensuel</div><input id="cap" type="number" inputmode="decimal" aria-label="Capital mensuel"></div>
+  <div class="card"><div class="lab">Épargne</div><input id="epa" type="number" inputmode="decimal" aria-label="Épargne"></div>
+ </div>
+ <div class="acts"><button class="sv" id="save">Sauvegarder</button><button class="rs" id="reset">Reset</button></div>
+ <div class="ok" id="ok"></div>
+</section>
+</div>
+<script>
+const KEY="monezia-v1";
+const def={capital:1764,epargne:250,charges:[[1,"Coiffeur",25],[3,"Virement",470],[4,"Apple Music",17],[5,"Assurance Auto",115],[5,"Mutuelle",55],[6,"Plein",200],[8,"Apple stockage",3],[10,"Forfait ligne perso / ligne pro",12],[10,"Crédit Voiture",0],[16,"Banque",12],[28,"Netflix",8],[30,"Suno",10]].map(c=>({d:c[0],n:c[1],a:c[2],done:false})),dep:[]};
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S)S=JSON.parse(JSON.stringify(def));
+let type="panier";
+const $=id=>document.getElementById(id);
+const eur=n=>(Math.round(n*100)/100).toLocaleString("fr-FR")+" €";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const fixTotal=()=>S.charges.reduce((t,c)=>t+(+c.a||0),0);
+const base=()=>S.capital-S.epargne-fixTotal();
+const spent=()=>S.dep.filter(d=>d.type!=="coiffeur").reduce((t,d)=>t+d.a,0);
+const reste=()=>base()-spent();
+
+function render(){
+ const b=base(),r=reste(),p=b>0?Math.max(0,Math.min(1,r/b)):0;
+ $("base").textContent=eur(b);$("reste").textContent=eur(r);
+ $("arc").style.strokeDashoffset=100-p*100;
+ $("arc").style.stroke=p>.3?"#7ed957":p>.1?"#f59e0b":"#ff5757";
+ $("reste").style.color=r<0?"var(--red)":"var(--orange)";
+ $("needle").style.transform="rotate("+(p*180-90)+"deg)";
+ $("tot").textContent=eur(fixTotal());
+ $("last").textContent=S.dep.length?eur(S.dep[S.dep.length-1].a):"";
+ $("cap").value=S.capital;$("epa").value=S.epargne;
+ $("tb").innerHTML=S.charges.map((c,i)=>`<tr class="${c.done?"done":""}"><td style="width:48px"><input data-i="${i}" data-f="d" type="number" value="${c.d}"></td><td><input data-i="${i}" data-f="n" value="${esc(c.n)}"></td><td style="width:78px"><input data-i="${i}" data-f="a" type="number" value="${c.a}"></td><td class="c"><input type="checkbox" data-i="${i}" data-f="done" ${c.done?"checked":""} aria-label="Payée"></td><td class="c"><button class="x" data-del="${i}" aria-label="Supprimer">×</button></td></tr>`).join("");
+ const L={panier:"Panier",coiffeur:"Coiffeur",essence:"Essence"};
+ $("hist").innerHTML=S.dep.length?S.dep.slice().reverse().map(d=>`<div class="row"><div>${L[d.type]}<small>${d.date}${d.type==="coiffeur"?" · charge fixe cochée, non déduite":""}</small></div><div>${d.type==="coiffeur"?"":"−"}${eur(d.a)}<button class="x" data-rm="${d.id}" aria-label="Supprimer">×</button></div></div>`).join(""):'<p style="color:var(--mute);font-weight:500;font-size:14px">Aucune dépense pour l’instant. Ajoute la première ci-dessus.</p>';
+ hint();
+}
+function hint(){
+ const v=parseFloat($("amt").value)||0,h=$("hint");
+ if(type==="essence")h.innerHTML=`Reste disponible : <b>${eur(reste()-v)}</b>`;
+ else if(type==="coiffeur")h.textContent="Coché dans les charges fixes, sans nouvelle déduction";
+ else h.innerHTML=`Déduit du budget · reste <b>${eur(reste()-v)}</b>`;
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));$("dep").hidden=t.dataset.t!=="dep";$("fix").hidden=t.dataset.t!=="fix"});
+document.querySelectorAll(".ty").forEach(t=>t.onclick=()=>{type=t.dataset.ty;document.querySelectorAll(".ty").forEach(x=>x.classList.toggle("on",x===t));hint()});
+document.querySelectorAll(".k").forEach(k=>k.onclick=()=>{const a=$("amt");let v=a.value;const d=k.dataset.k;if(d==="b")v=v.slice(0,-1);else if(d===","){if(v&&!v.includes("."))v+="."}else if(v.length<7)v+=d;a.value=v;hint()});
+$("go").onclick=()=>{
+ const a=parseFloat($("amt").value);
+ if(!(a>=0)||isNaN(a)){$("hint").textContent="Saisis un montant pour l’ajouter.";return}
+ if(type==="coiffeur"){const c=S.charges.find(c=>/coiffeur/i.test(c.n));if(c)c.done=true}
+ S.dep.push({id:Date.now(),type,a,date:new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})});
+ $("amt").value="";save();render();
+ if(type==="essence")$("hint").innerHTML=`Essence ajoutée · reste disponible : <b>${eur(reste())}</b>`;
+};
+$("hico").onclick=$("hbtn").onclick=()=>{const h=$("hcard");h.hidden=!h.hidden;if(!h.hidden)h.scrollIntoView({behavior:"smooth",block:"nearest"})};
+$("hist").onclick=e=>{const id=e.target.dataset.rm;if(!id)return;const d=S.dep.find(x=>x.id==id);if(d&&d.type==="coiffeur"){const c=S.charges.find(c=>/coiffeur/i.test(c.n));if(c)c.done=false}S.dep=S.dep.filter(x=>x.id!=id);save();render()};
+$("tb").onchange=e=>{const t=e.target,i=t.dataset.i;if(i==null)return;const f=t.dataset.f;S.charges[i][f]=f==="done"?t.checked:f==="n"?t.value:(parseFloat(t.value)||0);save();render()};
+$("tb").onclick=e=>{const i=e.target.dataset.del;if(i==null)return;S.charges.splice(i,1);save();render()};
+$("addc").onclick=()=>{S.charges.push({d:1,n:"Nouvelle charge",a:0,done:false});save();render()};
+$("cap").onchange=e=>{S.capital=parseFloat(e.target.value)||0;save();render()};
+$("epa").onchange=e=>{S.epargne=parseFloat(e.target.value)||0;save();render()};
+$("save").onclick=()=>{save();$("ok").textContent="Enregistré ✓";setTimeout(()=>$("ok").textContent="",2000)};
+$("reset").onclick=()=>{if(!$("reset").dataset.s){$("reset").dataset.s=1;$("reset").textContent="Confirmer ?";setTimeout(()=>{delete $("reset").dataset.s;$("reset").textContent="Reset"},3000);return}
+ S.dep=[];S.charges.forEach(c=>c.done=false);delete $("reset").dataset.s;$("reset").textContent="Reset";save();render();$("ok").textContent="Dépenses remises à zéro ✓";setTimeout(()=>$("ok").textContent="",2500)};
+render();
+</script>
+</body>
+</html>
