@@ -141,6 +141,12 @@ header{padding:0 8px 6px}
  .dock .k{height:54px;font-size:23px;border-radius:16px}
  .dock .go{height:54px;font-size:20px}
 }
+
+/* --- Montant + clavier fusionnés en un seul bloc --- */
+.dock .card.m{background:none;box-shadow:none;border-radius:0;padding:0 0 8px;margin:0;min-height:138px}
+@media (min-height:760px){.dock .card.m{min-height:156px}}
+#dep>.card:first-child{flex:1;display:flex;flex-direction:column}
+#dep>.card:first-child .gauge{flex:1;align-items:center}
 </style>
 </head>
 <body>
@@ -157,6 +163,12 @@ header{padding:0 8px 6px}
    <div class="s">Base<b id="base" style="color:#7ed957">0 €</b></div>
   </div>
  </div>
+ <div class="card" id="hcard" hidden>
+  <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
+  <div id="hist"></div>
+  <div id="arch"></div>
+ </div>
+<div class="dock">
  <div class="card m">
   <h2 style="text-align:center">Montant</h2><button class="hico" id="hico" aria-label="Historique"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg></button>
   <div class="types"><i class="ptr" id="ptr"></i>
@@ -168,12 +180,6 @@ header{padding:0 8px 6px}
   <div class="hint" id="hint"></div>
 
  </div>
- <div class="card" id="hcard" hidden>
-  <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
-  <div id="hist"></div>
-  <div id="arch"></div>
- </div>
-<div class="dock">
 <div class="keys"><button class="k" data-k="1">1</button><button class="k" data-k="2">2</button><button class="k" data-k="3">3</button><button class="k" data-k="4">4</button><button class="k" data-k="5">5</button><button class="k" data-k="6">6</button><button class="k" data-k="7">7</button><button class="k" data-k="8">8</button><button class="k" data-k="9">9</button><button class="k" data-k=",">,</button><button class="k" data-k="0">0</button><button class="k" data-k="b" aria-label="Effacer">⌫</button></div>
   <button class="go" id="go">Ajouter</button>
 </div>
