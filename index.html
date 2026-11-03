@@ -147,6 +147,13 @@ header{padding:0 8px 6px}
 @media (min-height:760px){.dock .card.m{min-height:156px}}
 #dep>.card:first-child{flex:1;display:flex;flex-direction:column}
 #dep>.card:first-child .gauge{flex:1;align-items:center}
+
+/* --- bloc du bas : même largeur que la carte Aujourd'hui, historique à la place de Montant --- */
+.dock{left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:calc(100% - 24px);max-width:436px;margin:0 auto;border-radius:24px;box-shadow:var(--sh);padding:12px 14px}
+.dock #hcard{background:none;box-shadow:none;border-radius:0;padding:0 0 8px;margin:0;height:138px;display:flex;flex-direction:column}
+.dock .hint{padding:0 56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock .hscroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media (min-height:760px){.dock #hcard{height:156px}}
 </style>
 </head>
 <body>
@@ -163,11 +170,6 @@ header{padding:0 8px 6px}
    <div class="s">Base<b id="base" style="color:#7ed957">0 €</b></div>
   </div>
  </div>
- <div class="card" id="hcard" hidden>
-  <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
-  <div id="hist"></div>
-  <div id="arch"></div>
- </div>
 <div class="dock">
  <div class="card m">
   <h2 style="text-align:center">Montant</h2><button class="hico" id="hico" aria-label="Historique"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg></button>
@@ -179,6 +181,12 @@ header{padding:0 8px 6px}
   <div class="amt"><input id="amt" type="text" inputmode="none" readonly placeholder="0" aria-label="Montant en euros"><span>€</span></div>
   <div class="hint" id="hint"></div>
 
+ </div>
+
+<div class="card" id="hcard" hidden>
+  <div style="display:flex;align-items:center"><h2 style="margin:0">Historique</h2><button class="link" id="hbtn">Fermer</button></div>
+  <div class="hscroll"><div id="hist"></div>
+  <div id="arch"></div></div>
  </div>
 <div class="keys"><button class="k" data-k="1">1</button><button class="k" data-k="2">2</button><button class="k" data-k="3">3</button><button class="k" data-k="4">4</button><button class="k" data-k="5">5</button><button class="k" data-k="6">6</button><button class="k" data-k="7">7</button><button class="k" data-k="8">8</button><button class="k" data-k="9">9</button><button class="k" data-k=",">,</button><button class="k" data-k="0">0</button><button class="k" data-k="b" aria-label="Effacer">⌫</button></div>
   <button class="go" id="go">Ajouter</button>
@@ -247,7 +255,7 @@ function hint(){
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));$("dep").hidden=t.dataset.t!=="dep";$("fix").hidden=t.dataset.t!=="fix"});
 function movePtr(){const b=[...document.querySelectorAll(".ty")],n=b.length;if(n<2)return;const st=b[1].offsetTop-b[0].offsetTop,sel=Math.max(0,b.findIndex(x=>x.classList.contains("on")));b.forEach((x,i)=>{const slot=((i-sel+1)%n+n)%n;x.style.transform="translateY("+(slot-i)*st+"px)"});$("ptr").style.top=(st+b[0].offsetHeight/2-7)+"px"}
 movePtr();addEventListener("load",movePtr);addEventListener("resize",movePtr);
-(function(){const d=document.querySelector(".dock"),a=document.querySelector(".app"),f=()=>a.style.paddingBottom=(d.offsetHeight+16)+"px";f();if(window.ResizeObserver)new ResizeObserver(f).observe(d);addEventListener("resize",f)})();
+(function(){const d=document.querySelector(".dock"),a=document.querySelector(".app"),f=()=>a.style.paddingBottom=(d.offsetHeight+30)+"px";f();if(window.ResizeObserver)new ResizeObserver(f).observe(d);addEventListener("resize",f)})();
 document.querySelectorAll(".ty").forEach(t=>t.onclick=()=>{type=t.dataset.ty;document.querySelectorAll(".ty").forEach(x=>x.classList.toggle("on",x===t));movePtr();hint()});
 document.querySelectorAll(".k").forEach(k=>k.onclick=()=>{const a=$("amt");let v=a.value;const d=k.dataset.k;if(d==="b")v=v.slice(0,-1);else if(d===","){if(v&&!v.includes("."))v+="."}else if(v.length<7)v+=d;a.value=v;hint()});
 $("go").onclick=()=>{
@@ -258,7 +266,9 @@ $("go").onclick=()=>{
  $("amt").value="";save();render();
  if(type==="essence")$("hint").innerHTML=`Essence ajoutée · reste disponible : <b>${eur(reste())}</b>`;
 };
-$("hico").onclick=$("hbtn").onclick=()=>{const h=$("hcard");h.hidden=!h.hidden;if(!h.hidden)h.scrollIntoView({behavior:"smooth",block:"nearest"})};
+function setHist(o){$("hcard").hidden=!o;document.querySelector(".dock .card.m").hidden=o}
+$("hico").onclick=()=>setHist(true);$("hbtn").onclick=()=>setHist(false);
+document.querySelectorAll(".dock .k,.dock .go").forEach(b=>b.addEventListener("click",()=>setHist(false)));
 $("hist").onclick=e=>{const id=e.target.dataset.rm;if(!id)return;const d=S.dep.find(x=>x.id==id);if(d&&d.type==="coiffeur"){const c=S.charges.find(c=>/coiffeur/i.test(c.n));if(c)c.done=false}S.dep=S.dep.filter(x=>x.id!=id);save();render()};
 $("tb").onchange=e=>{const t=e.target,i=t.dataset.i;if(i==null)return;const f=t.dataset.f;S.charges[i][f]=f==="done"?t.checked:f==="n"?t.value:(parseFloat(t.value)||0);save();render()};
 $("tb").onclick=e=>{const i=e.target.dataset.del;if(i==null)return;S.charges.splice(i,1);save();render()};
