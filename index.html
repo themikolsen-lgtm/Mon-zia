@@ -204,8 +204,6 @@ header{padding:0 8px 6px}
   <div class="card"><div class="lab">Épargne</div><input id="epa" type="number" inputmode="decimal" aria-label="Épargne"></div>
  </div>
  <div class="acts"><button class="sv" id="save">Sauvegarder</button><button class="rs" id="reset">Reset</button></div>
- <div class="acts" style="margin-top:12px"><button id="exp" style="background:var(--card);color:var(--ink);font-size:16px">Exporter</button><button id="imp" style="background:var(--card);color:var(--ink);font-size:16px">Importer</button></div>
- <input type="file" id="file" accept="application/json,.json" hidden>
  <div class="ok" id="ok"></div>
 </section>
 </div>
@@ -287,9 +285,6 @@ $("epa").onchange=e=>{S.epargne=parseFloat(e.target.value)||0;save();render()};
 $("save").onclick=()=>{save();$("ok").textContent="Enregistré ✓";setTimeout(()=>$("ok").textContent="",2000)};
 $("reset").onclick=()=>{if(!$("reset").dataset.s){$("reset").dataset.s=1;$("reset").textContent="Confirmer ?";setTimeout(()=>{delete $("reset").dataset.s;$("reset").textContent="Reset"},3000);return}
  if(S.dep.length)S.archive.push({label:new Date(S.dep[0].id).toLocaleDateString("fr-FR",{month:"long",year:"numeric"}),base:base(),spent:spent(),n:S.dep.length,dep:S.dep});S.dep=[];S.charges.forEach(c=>c.done=false);delete $("reset").dataset.s;$("reset").textContent="Reset";save();render();$("ok").textContent="Mois archivé, compteur remis à zéro ✓";setTimeout(()=>$("ok").textContent="",2500)};
-$("exp").onclick=()=>{const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="monezia-sauvegarde-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$("ok").textContent="Sauvegarde exportée ✓";setTimeout(()=>$("ok").textContent="",2500)};
-$("imp").onclick=()=>$("file").click();
-$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{S=norm(JSON.parse(r.result));save();render();$("ok").textContent="Sauvegarde importée ✓"}catch(x){$("ok").textContent="Fichier invalide"}setTimeout(()=>$("ok").textContent="",2500)};r.readAsText(f);e.target.value=""};
 addEventListener("pagehide",save);
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save()});
