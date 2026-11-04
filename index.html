@@ -82,6 +82,7 @@ tr.done td input{text-decoration:line-through;color:var(--mute)}
 .pill i{width:2px;height:24px;background:var(--g1);opacity:.6;border-radius:2px}
 [hidden]{display:none!important}
 
+.env{font-size:11px;font-weight:600;color:var(--mute);padding:0 8px 2px;margin-top:-2px}.env.zero{color:var(--orange)}
 /* --- compact smartphone --- */
 .app{padding:10px 12px 20px}
 header{padding:0 8px 6px}
@@ -226,9 +227,17 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const fixTotal=()=>S.charges.reduce((t,c)=>t+(+c.a||0),0);
 const base=()=>S.capital-S.epargne-fixTotal();
-const spent=()=>S.dep.filter(d=>d.type!=="coiffeur").reduce((t,d)=>t+d.a,0);
+const isEnv=c=>/plein|carburant|essence/i.test(c.n);
+function envState(){const tot=S.charges.reduce((t,c)=>t+(isEnv(c)?(+c.a||0):0),0);let left=tot;const rows={};S.dep.forEach(d=>{if(d.type==="essence"){const f=Math.max(0,Math.min(d.a,left));left-=f;rows[d.id]={from:f,over:d.a-f}}});return{tot,left,rows}}
+const spent=()=>{const e=envState();return S.dep.filter(d=>d.type!=="coiffeur").reduce((t,d)=>t+d.a,0)-(e.tot-e.left)};
 const reste=()=>base()-spent();
 
+function envNote(c,i){
+ if(!isEnv(c))return"";
+ const e=envState();let used=e.tot-e.left,rem=+c.a||0;
+ for(let k=0;k<S.charges.length;k++){const x=S.charges[k];if(!isEnv(x))continue;const a=+x.a||0,u=Math.min(used,a);used-=u;if(k===i){rem=a-u;break}}
+ return `<div class="env${rem<=0?" zero":""}">${rem<=0?"Épuisé":"Reste "+eur(rem)} sur ${eur(+c.a||0)}</div>`;
+}
 function render(){
  const b=base(),r=reste(),p=b>0?Math.max(0,Math.min(1,r/b)):0;
  $("base").textContent=eur(b);$("reste").textContent=eur(r);
@@ -238,15 +247,16 @@ function render(){
  $("needle").style.transform="rotate("+(p*180-90)+"deg)";
  $("tot").textContent=eur(fixTotal());
  $("cap").value=S.capital;$("epa").value=S.epargne;
- $("tb").innerHTML=S.charges.map((c,i)=>`<tr class="${c.done?"done":""}"><td style="width:48px"><input data-i="${i}" data-f="d" type="number" value="${c.d}"></td><td><input data-i="${i}" data-f="n" value="${esc(c.n)}"></td><td style="width:78px"><input data-i="${i}" data-f="a" type="number" value="${c.a}"></td><td class="c"><input type="checkbox" data-i="${i}" data-f="done" ${c.done?"checked":""} aria-label="Payée"></td><td class="c"><button class="x" data-del="${i}" aria-label="Supprimer">×</button></td></tr>`).join("");
+ $("tb").innerHTML=S.charges.map((c,i)=>`<tr class="${c.done?"done":""}"><td style="width:48px"><input data-i="${i}" data-f="d" type="number" value="${c.d}"></td><td><input data-i="${i}" data-f="n" value="${esc(c.n)}">${envNote(c,i)}</td><td style="width:78px"><input data-i="${i}" data-f="a" type="number" value="${c.a}"></td><td class="c"><input type="checkbox" data-i="${i}" data-f="done" ${c.done?"checked":""} aria-label="Payée"></td><td class="c"><button class="x" data-del="${i}" aria-label="Supprimer">×</button></td></tr>`).join("");
+ const envE=envState(),envLabel=d=>{const r=envE.rows[d.id];if(!r||!envE.tot)return"";return r.over<=0?" · pris sur le Plein":r.from>0?" · "+eur(r.from)+" sur le Plein, "+eur(r.over)+" du budget":" · Plein épuisé, du budget"};
  const L={panier:"Panier",coiffeur:"Coiffeur",essence:"Essence"};
- $("hist").innerHTML=S.dep.length?S.dep.slice().reverse().map(d=>`<div class="row"><div>${L[d.type]}<small>${d.date}${d.type==="coiffeur"?" · charge fixe cochée, non déduite":""}</small></div><div>${d.type==="coiffeur"?"":"−"}${eur(d.a)}<button class="x" data-rm="${d.id}" aria-label="Supprimer">×</button></div></div>`).join(""):'<p style="color:var(--mute);font-weight:500;font-size:14px">Aucune dépense pour l’instant. Ajoute la première ci-dessus.</p>';
+ $("hist").innerHTML=S.dep.length?S.dep.slice().reverse().map(d=>`<div class="row"><div>${L[d.type]}<small>${d.date}${d.type==="coiffeur"?" · charge fixe cochée, non déduite":d.type==="essence"?envLabel(d):""}</small></div><div>${d.type==="coiffeur"?"":"−"}${eur(d.a)}<button class="x" data-rm="${d.id}" aria-label="Supprimer">×</button></div></div>`).join(""):'<p style="color:var(--mute);font-weight:500;font-size:14px">Aucune dépense pour l’instant. Ajoute la première ci-dessus.</p>';
  $("arch").innerHTML=S.archive.length?'<h2 style="margin:18px 0 6px">Mois précédents</h2>'+S.archive.slice().reverse().map(m=>`<div class="row"><div>${esc(m.label)}<small>${m.n} dépense${m.n>1?"s":""}</small></div><div style="text-align:right">−${eur(m.spent)}<small>sur ${eur(m.base)}</small></div></div>`).join(""):"";
  hint();
 }
 function hint(){
  const v=parseFloat($("amt").value)||0,h=$("hint");
- if(type==="essence")h.innerHTML=`Reste disponible : <b>${eur(reste()-v)}</b>`;
+ if(type==="essence"){const e=envState();if(!e.tot)h.innerHTML=`Reste disponible : <b>${eur(reste()-v)}</b>`;else{const cov=Math.min(v,e.left),over=v-cov;h.innerHTML=over>0?`Plein vide · budget reste <b>${eur(reste()-over)}</b>`:`Plein : reste <b>${eur(e.left-cov)}</b>`}}
  else if(type==="coiffeur")h.textContent="Coché dans les charges fixes, sans nouvelle déduction";
  else h.innerHTML=`Déduit du budget · reste <b>${eur(reste()-v)}</b>`;
 }
@@ -262,7 +272,7 @@ $("go").onclick=()=>{
  if(type==="coiffeur"){const c=S.charges.find(c=>/coiffeur/i.test(c.n));if(c)c.done=true}
  S.dep.push({id:Date.now(),type,a,date:new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})});
  $("amt").value="";save();render();
- if(type==="essence")$("hint").innerHTML=`Essence ajoutée · reste disponible : <b>${eur(reste())}</b>`;
+ if(type==="essence"){const e=envState();$("hint").innerHTML=e.tot?(e.left>0?`Ajoutée · Plein reste <b>${eur(e.left)}</b>`:`Ajoutée · Plein vide · budget <b>${eur(reste())}</b>`):`Essence ajoutée · reste disponible : <b>${eur(reste())}</b>`}
 };
 function setHist(o){$("hcard").hidden=!o;document.querySelector(".dock .card.m").hidden=o}
 $("hico").onclick=()=>setHist(true);$("hbtn").onclick=()=>setHist(false);
