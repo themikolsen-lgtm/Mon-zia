@@ -49,7 +49,8 @@ h2{margin:0 0 6px;font-size:20px}
 .link{border:0;background:none;color:var(--ink);font:600 14px Poppins;cursor:pointer;display:flex;align-items:center;gap:6px;margin:0 0 0 auto}
 .scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font:500 14px Poppins,sans-serif}
-th,td{border:1px solid var(--line);padding:2px 4px;text-align:left}
+th,td{border:0;border-bottom:1px solid var(--line);padding:2px 4px;text-align:left}
+tbody tr:last-child td{border-bottom:0}
 td input{width:100%;border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 4px;min-width:40px}
 td.c{text-align:center;width:34px}
 tr.done td input{text-decoration:line-through;color:var(--mute)}
@@ -194,7 +195,7 @@ header{padding:0 8px 6px}
 
 <section id="fix" hidden>
  <div class="card">
-  <div class="scroll"><table><thead><tr><th>Jour</th><th>Nom</th><th>Montant</th><th>✓</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+  <div class="scroll"><table><thead><tr><th>Jour</th><th>Nom</th><th>Montant</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
   <div class="tot"><span>Total des charges</span><b id="tot" style="color:var(--ink)"></b></div>
   <button class="add" id="addc">+ Ajouter une charge fixe</button>
  </div>
@@ -248,7 +249,7 @@ function render(){
  $("needle").style.transform="rotate("+(p*180-90)+"deg)";
  $("tot").textContent=eur(fixTotal());
  $("cap").value=S.capital;$("epa").value=S.epargne;
- $("tb").innerHTML=S.charges.map((c,i)=>`<tr class="${c.done?"done":""}"><td style="width:48px"><input data-i="${i}" data-f="d" type="number" value="${c.d}"></td><td><input data-i="${i}" data-f="n" value="${esc(c.n)}">${envNote(c,i)}</td><td style="width:78px"><input data-i="${i}" data-f="a" type="number" value="${c.a}"></td><td class="c"><input type="checkbox" data-i="${i}" data-f="done" ${c.done?"checked":""} aria-label="Payée"></td><td class="c"><button class="x" data-del="${i}" aria-label="Supprimer">×</button></td></tr>`).join("");
+ $("tb").innerHTML=S.charges.map((c,i)=>`<tr><td style="width:48px"><input data-i="${i}" data-f="d" type="number" value="${c.d}"></td><td><input data-i="${i}" data-f="n" value="${esc(c.n)}">${envNote(c,i)}</td><td style="width:78px"><input data-i="${i}" data-f="a" type="number" value="${c.a}"></td><td class="c"><button class="x" data-del="${i}" aria-label="Supprimer">×</button></td></tr>`).join("");
  const envE={essence:envState("essence"),coiffeur:envState("coiffeur")},envLabel=d=>{const E=envE[d.type];if(!E||!E.tot)return"";const r=E.rows[d.id],N=NAME[d.type];return r.over<=0?" · pris sur "+N:r.from>0?" · "+eur(r.from)+" sur "+N+", "+eur(r.over)+" du budget":" · "+N+" épuisé, du budget"};
  const L={panier:"Panier",coiffeur:"Coiffeur",essence:"Essence"};
  $("hist").innerHTML=S.dep.length?S.dep.slice().reverse().map(d=>`<div class="row"><div>${L[d.type]}<small>${d.date}${envLabel(d)}</small></div><div>−${eur(d.a)}<button class="x" data-rm="${d.id}" aria-label="Supprimer">×</button></div></div>`).join(""):'<p style="color:var(--mute);font-weight:500;font-size:14px">Aucune dépense pour l’instant. Ajoute la première ci-dessus.</p>';
@@ -271,14 +272,13 @@ $("go").onclick=()=>{
  if(!(a>=0)||isNaN(a)){$("hint").textContent="Saisis un montant pour l’ajouter.";return}
  S.dep.push({id:Date.now(),type,a,date:new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})});
  $("amt").value="";
- if(ENV[type]){const e=envState(type);if(e.tot&&e.left<=0)S.charges.forEach(c=>{if(envType(c)===type)c.done=true})}
  save();render();
  if(ENV[type]){const e=envState(type),N=NAME[type];$("hint").innerHTML=e.tot?(e.left>0?`Ajouté · ${N} reste <b>${eur(e.left)}</b>`:`Ajouté · ${N} vide · budget <b>${eur(reste())}</b>`):`Ajouté · reste disponible : <b>${eur(reste())}</b>`}
 };
 function setHist(o){$("hcard").hidden=!o;document.querySelector(".dock .card.m").hidden=o}
 $("hico").onclick=()=>setHist(true);$("hbtn").onclick=()=>setHist(false);
 document.querySelectorAll(".dock .k,.dock .go").forEach(b=>b.addEventListener("click",()=>setHist(false)));
-$("hist").onclick=e=>{const id=e.target.dataset.rm;if(!id)return;const d=S.dep.find(x=>x.id==id);S.dep=S.dep.filter(x=>x.id!=id);if(d&&ENV[d.type]){const e=envState(d.type);if(e.left>0)S.charges.forEach(c=>{if(envType(c)===d.type)c.done=false})}save();render()};
+$("hist").onclick=e=>{const id=e.target.dataset.rm;if(!id)return;const d=S.dep.find(x=>x.id==id);S.dep=S.dep.filter(x=>x.id!=id);save();render()};
 $("tb").onchange=e=>{const t=e.target,i=t.dataset.i;if(i==null)return;const f=t.dataset.f;S.charges[i][f]=f==="done"?t.checked:f==="n"?t.value:(parseFloat(t.value)||0);save();render()};
 $("tb").onclick=e=>{const i=e.target.dataset.del;if(i==null)return;S.charges.splice(i,1);save();render()};
 $("addc").onclick=()=>{S.charges.push({d:1,n:"Nouvelle charge",a:0,done:false});save();render()};
