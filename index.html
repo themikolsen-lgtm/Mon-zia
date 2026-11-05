@@ -213,7 +213,15 @@ $("go").onclick=()=>{
 };
 function setHist(o){$("hcard").hidden=!o;$("amtbox").hidden=o;document.querySelector(".keys").hidden=o;document.querySelector(".card.main").classList.toggle("hist",o);$("hico").classList.toggle("on",o);if(!o)movePtr()}
 $("hico").onclick=()=>setHist($("hcard").hidden);
-$("back").onclick=()=>{const a=$("amt");a.value=a.value.slice(0,-1);hint()};
+$("back").onclick=()=>{
+ const a=$("amt");
+ if(a.value){a.value=a.value.slice(0,-1);hint();return}
+ const d=S.dep[S.dep.length-1];if(!d)return;
+ S.dep.pop();save();
+ type=d.type;document.querySelectorAll(".ty").forEach(x=>x.classList.toggle("on",x.dataset.ty===type));movePtr();
+ a.value=String(d.a);render();
+ $("hint").textContent="Reprise · modifie puis Ajoute";
+};
 document.querySelectorAll("#go").forEach(b=>b.addEventListener("click",()=>setHist(false)));
 $("hist").onclick=e=>{const id=e.target.dataset.rm;if(!id)return;const d=S.dep.find(x=>x.id==id);S.dep=S.dep.filter(x=>x.id!=id);save();render()};
 $("tb").onchange=e=>{const t=e.target,i=t.dataset.i;if(i==null)return;const f=t.dataset.f;S.charges[i][f]=f==="done"?t.checked:f==="n"?t.value:(parseFloat(t.value)||0);save();render()};
