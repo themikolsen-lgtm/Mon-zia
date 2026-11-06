@@ -193,7 +193,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const fixTotal=()=>S.charges.reduce((t,c)=>t+(+c.a||0),0);
 const base=()=>S.capital-S.epargne-fixTotal();
-const ENV={essence:/plein|carburant|essence/i,coiffeur:/coiffeur/i},NAME={essence:"Plein",coiffeur:"Coiffeur"};
+const ENV={essence:/plein|carburant|essence/i,coiffeur:/coiffeur/i},NAME={essence:"Essence",coiffeur:"Coiffeur"};
 const envType=c=>Object.keys(ENV).find(t=>ENV[t].test(c.n))||null;
 function envState(t){const tot=S.charges.reduce((x,c)=>x+(envType(c)===t?(+c.a||0):0),0);let left=tot;const rows={};S.dep.forEach(d=>{if(d.type===t){const f=Math.max(0,Math.min(d.a,left));left-=f;rows[d.id]={from:f,over:d.a-f}}});return{tot,left,rows}}
 const spent=()=>S.dep.reduce((t,d)=>t+d.a,0)-Object.keys(ENV).reduce((t,k)=>{const e=envState(k);return t+e.tot-e.left},0);
@@ -210,7 +210,7 @@ function render(){
  $("base").textContent=eur(b);$("reste").textContent=eur(r);$("spent").textContent=eur(sp);
  $("bar").style.width=(p*100)+"%";$("bar").classList.toggle("low",p<.1);
  $("sum").innerHTML=`<b>${eur(b)}</b> de base = ${eur(S.capital)} − ${eur(S.epargne)} − ${eur(fixTotal())} de charges`;
- $("envs").innerHTML=["essence","coiffeur"].map(t=>{const e=envState(t);return e.tot?`<button class="chip${e.left<=0?" zero":""}" data-ty2="${t}">${NAME[t]}<b>${e.left<=0?"épuisé":eur(e.left)}</b></button>`:""}).join("");
+ $("envs").innerHTML=["essence","coiffeur"].map(t=>{const e=envState(t);return `<button class="chip${!e.tot||e.left<=0?" zero":""}" data-ty2="${t}">${NAME[t]}<b>${!e.tot?"—":e.left<=0?"épuisé":eur(e.left)}</b></button>`}).join("");
  $("cap").value=S.capital;$("epa").value=S.epargne;[$("cap"),$("epa")].forEach(i=>i.style.width=(String(i.value).length+.5)+"ch");
  $("tb").innerHTML=S.charges.map((c,i)=>`<div class="cr"><input class="d" data-i="${i}" data-f="d" type="number" inputmode="numeric" value="${c.d}" aria-label="Jour"><div><input data-i="${i}" data-f="n" value="${esc(c.n)}" aria-label="Nom">${envNote(c,i)}</div><div class="eu"><input data-i="${i}" data-f="a" type="number" inputmode="decimal" value="${c.a}" style="width:${Math.max(2,String(c.a).length)+.4}ch" aria-label="Montant"><span>€</span></div><button class="x" data-del="${i}" aria-label="Supprimer">×</button></div>`).join("");
  const envE={essence:envState("essence"),coiffeur:envState("coiffeur")},envLabel=d=>{const E=envE[d.type];if(!E||!E.tot)return"";const r=E.rows[d.id],N=NAME[d.type];return r.over<=0?" · pris sur "+N:r.from>0?" · "+eur(r.from)+" sur "+N+", "+eur(r.over)+" du budget":" · "+N+" épuisé, du budget"};
