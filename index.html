@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#000000">
-<title>Monézia</title>
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
-<link rel="manifest" href="manifest.json?v=2">
-<meta name="apple-mobile-web-app-title" content="Monézia">
+<title>Mon compte</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<link rel="manifest" href="manifest.json?v=3">
+<meta name="apple-mobile-web-app-title" content="Mon compte">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
@@ -27,13 +27,15 @@ h2{margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spaci
 body.d .app{height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
 
 header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0 12px;flex:none}
-.logo{font-size:24px;font-weight:800;letter-spacing:-.045em;color:#fff}
+.logo{font-size:23px;font-weight:800;letter-spacing:-.04em;color:#fff;white-space:nowrap}
 .logo small{font-size:11px;font-weight:500;letter-spacing:0;color:var(--mute);margin-left:4px}
 .hb{display:flex;gap:8px;align-items:center}
 .ib,.pill{height:40px;border:0;background:var(--card);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .ib{width:40px;border-radius:50%}
 .ib.on{background:#fff;color:#000}
-.pill{gap:7px;border-radius:999px;padding:0 16px;font:600 13px Inter,sans-serif}
+.pill{gap:7px;border-radius:999px;padding:0 14px;font:600 13px Inter,sans-serif;white-space:nowrap}
+@media (max-width:370px){.logo small{display:none}.pill{padding:0 12px}}
+@media (max-width:340px){.logo{font-size:19px}.pill{font-size:12px;padding:0 10px;gap:5px}.ib{width:36px;height:36px}.ib,.pill{height:36px}.hb{gap:6px}.app{padding-left:12px;padding-right:12px}}
 .ib svg,.pill svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 #dep:not([hidden]){flex:1;display:flex;flex-direction:column;min-height:0}
@@ -125,7 +127,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <body class="d">
 <div class="app">
 <header>
- <div class="logo">Monézia<small>1.0</small></div>
+ <div class="logo">Mon compte<small>1.0</small></div>
  <div class="hb"><button class="ib" id="hico" aria-label="Historique"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg></button><button class="pill" id="nav" aria-label="Changer d’écran"></button></div>
 </header>
 
