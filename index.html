@@ -117,6 +117,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .sv{background:#fff;color:#000;border:0}
 .rs{background:transparent;color:#fff;border:1.5px solid var(--line)}
 .rs[data-s]{background:#fff;color:#000;border-color:#fff}
+#undo{position:fixed;left:16px;right:16px;max-width:428px;margin:0 auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:#fff;color:#000;border-radius:16px;padding:10px 10px 10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;font-weight:600;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,.7)}
+#undo button{border:0;background:#000;color:#fff;border-radius:10px;padding:9px 16px;font:700 13px Inter,sans-serif;cursor:pointer}
 .ok{text-align:center;color:var(--mute);min-height:22px;margin-top:10px;font-size:13px}
 </style>
 </head>
@@ -168,15 +170,18 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
  <div class="acts"><button class="sv" id="save">Sauvegarder</button><button class="rs" id="reset">Reset</button></div>
  <div class="ok" id="ok"></div>
 </section>
+<div id="undo" hidden></div>
 </div>
 <script>
 const KEY="monezia-v1";
 const def={capital:1764,epargne:250,charges:[[1,"Coiffeur",25],[3,"Virement",470],[4,"Apple Music",17],[5,"Assurance Auto",115],[5,"Mutuelle",55],[6,"Plein",200],[8,"Apple stockage",3],[10,"Forfait ligne perso / ligne pro",12],[10,"Crédit Voiture",0],[16,"Banque",12],[28,"Netflix",8],[30,"Suno",10]].map(c=>({d:c[0],n:c[1],a:c[2],done:false})),dep:[]};
 function norm(s){
  const d=JSON.parse(JSON.stringify(def));
- if(!s||typeof s!=="object")return Object.assign(d,{archive:[]});
+ if(!s||typeof s!=="object")return Object.assign(d,{archive:[],mig:1});
  const n=(v,f)=>isNaN(parseFloat(v))?f:parseFloat(v);
- return{capital:n(s.capital,d.capital),epargne:n(s.epargne,d.epargne),charges:Array.isArray(s.charges)?s.charges:d.charges,dep:Array.isArray(s.dep)?s.dep:[],archive:Array.isArray(s.archive)?s.archive:[]};
+ const o={capital:n(s.capital,d.capital),epargne:n(s.epargne,d.epargne),charges:Array.isArray(s.charges)?s.charges:d.charges,dep:Array.isArray(s.dep)?s.dep:[],archive:Array.isArray(s.archive)?s.archive:[],mig:1};
+ if(!(s.mig>=1)&&!o.charges.some(c=>/plein|carburant|essence/i.test(c.n||""))){const k=o.charges.findIndex(c=>(+c.d||0)>6);o.charges.splice(k<0?o.charges.length:k,0,{d:6,n:"Plein",a:200,done:false})}
+ return o;
 }
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}return norm(s)}
 let S=load();
@@ -221,7 +226,7 @@ function hint(){
 }
 const NAV_FIX='Charges fixes <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg>',NAV_BACK='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg> Retour';
 let screen="dep";
-function show(s){screen=s;if(s!=="dep")setHist(false);$("dep").hidden=s!=="dep";$("fix").hidden=s!=="fix";$("hico").hidden=s!=="dep";document.body.classList.toggle("d",s==="dep");$("nav").innerHTML=s==="dep"?NAV_FIX:NAV_BACK;scrollTo(0,0);if(s==="dep")moveThumb()}
+function show(s){screen=s;if(s!=="dep")setHist(false);$("dep").hidden=s!=="dep";$("fix").hidden=s!=="fix";$("hico").hidden=s!=="dep";document.body.classList.toggle("d",s==="dep");$("nav").innerHTML=s==="dep"?NAV_FIX:NAV_BACK;scrollTo(0,0);hideUndo();if(s==="dep")moveThumb()}
 $("nav").onclick=()=>show(screen==="dep"?"fix":"dep");
 function moveThumb(){const b=[...document.querySelectorAll(".ty")],i=Math.max(0,b.findIndex(x=>x.classList.contains("on")));$("thumb").style.transform="translateX("+i*100+"%)"}
 function selType(t){type=t;document.querySelectorAll(".ty").forEach(x=>x.classList.toggle("on",x.dataset.ty===t));moveThumb();hint()}
@@ -249,7 +254,11 @@ $("back").onclick=()=>{
 };
 $("hist").onclick=e=>{const id=e.target.dataset.rm;if(!id)return;S.dep=S.dep.filter(x=>x.id!=id);save();render()};
 $("tb").onchange=e=>{const t=e.target,i=t.dataset.i;if(i==null)return;const f=t.dataset.f;S.charges[i][f]=f==="n"?t.value:(parseFloat(t.value)||0);save();render()};
-$("tb").onclick=e=>{const i=e.target.dataset.del;if(i==null)return;S.charges.splice(i,1);save();render()};
+let lastDel=null,undoT;
+function hideUndo(){clearTimeout(undoT);$("undo").hidden=true}
+$("tb").onclick=e=>{const i=e.target.dataset.del;if(i==null)return;const c=S.charges.splice(i,1)[0];lastDel={c,i:+i};save();render();
+ $("undo").innerHTML=`<span>« ${esc(c.n)} » supprimée</span><button id="undob">Annuler</button>`;$("undo").hidden=false;clearTimeout(undoT);undoT=setTimeout(()=>$("undo").hidden=true,8000)};
+$("undo").onclick=e=>{if(e.target.id!=="undob"||!lastDel)return;S.charges.splice(Math.min(lastDel.i,S.charges.length),0,lastDel.c);lastDel=null;save();render();hideUndo()};
 $("addc").onclick=()=>{S.charges.push({d:1,n:"Nouvelle charge",a:0,done:false});save();render()};
 $("pc").onclick=()=>$("cap").focus();$("pe").onclick=()=>$("epa").focus();
 $("cap").onchange=e=>{S.capital=parseFloat(e.target.value)||0;save();render()};
