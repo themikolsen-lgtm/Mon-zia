@@ -119,8 +119,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .sv{background:#fff;color:#000;border:0}
 .rs{background:transparent;color:#fff;border:1.5px solid var(--line)}
 .rs[data-s]{background:#fff;color:#000;border-color:#fff}
-#undo{position:fixed;left:16px;right:16px;max-width:428px;margin:0 auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:#fff;color:#000;border-radius:16px;padding:10px 10px 10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;font-weight:600;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,.7)}
-#undo button{border:0;background:#000;color:#fff;border-radius:10px;padding:9px 16px;font:700 13px Inter,sans-serif;cursor:pointer}
+#undo,#note{position:fixed;left:16px;right:16px;max-width:428px;margin:0 auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:#fff;color:#000;border-radius:16px;padding:10px 10px 10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;font-weight:600;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,.7)}
+#undo button,#note button{border:0;background:#000;color:#fff;border-radius:10px;padding:9px 16px;font:700 13px Inter,sans-serif;cursor:pointer}
 .ok{text-align:center;color:var(--mute);min-height:22px;margin-top:10px;font-size:13px}
 </style>
 </head>
@@ -170,9 +170,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <button class="add" id="addc">+ Ajouter une charge fixe</button>
  </div>
  <div class="acts"><button class="sv" id="save">Sauvegarder</button><button class="rs" id="reset">Reset</button></div>
+ <div class="sum" id="stor" style="text-align:center;margin:14px 4px 0"></div>
  <div class="ok" id="ok"></div>
 </section>
 <div id="undo" hidden></div>
+<div id="note" hidden></div>
 </div>
 <script>
 const KEY="monezia-v1";
@@ -185,14 +187,39 @@ function norm(s){
  if(!(s.mig>=1)&&!o.charges.some(c=>/plein|carburant|essence/i.test(c.n||""))){const k=o.charges.findIndex(c=>(+c.d||0)>6);o.charges.splice(k<0?o.charges.length:k,0,{d:6,n:"Plein",a:200,done:false})}
  return o;
 }
-function load(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}return norm(s)}
+const SNAPKEY="monezia-copies";
+let restoredFrom=null,lastSaveT=null,saveFailed=false,persisted=null;
+function readSnaps(){try{const a=JSON.parse(localStorage.getItem(SNAPKEY));return Array.isArray(a)?a.filter(x=>x&&x.d&&typeof x.d==="object"):[]}catch(e){return[]}}
+function load(){
+ let s=null,raw=null;
+ try{raw=localStorage.getItem(KEY)}catch(e){}
+ if(raw){try{s=JSON.parse(raw)}catch(e){try{localStorage.setItem(KEY+"-illisible-"+Date.now(),raw)}catch(_){}}}
+ const sn=readSnaps();if(sn.length)lastSaveT=sn[sn.length-1].t;
+ if(!s||typeof s!=="object"){if(sn.length){s=sn[sn.length-1].d;restoredFrom=sn[sn.length-1].t}}
+ return norm(s);
+}
 let S=load();
-try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+try{if(navigator.storage){if(navigator.storage.persist)navigator.storage.persist().then(v=>{persisted=v;updStor()}).catch(()=>{});else if(navigator.storage.persisted)navigator.storage.persisted().then(v=>{persisted=v;updStor()})}}catch(e){}
 let type="panier";
 const $=id=>document.getElementById(id);
 const eur=n=>(Math.round(n*100)/100).toLocaleString("fr-FR")+" €";
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){
+ try{localStorage.setItem(KEY,JSON.stringify(S));saveFailed=false;lastSaveT=Date.now()}catch(e){saveFailed=true}
+ try{snap()}catch(e){}
+}
+function snap(){
+ const day=new Date().toISOString().slice(0,10);let a=readSnaps();
+ const e={t:Date.now(),day,d:JSON.parse(JSON.stringify(S))},l=a[a.length-1];
+ if(l&&l.day===day)a[a.length-1]=e;else a.push(e);
+ a=a.slice(-7);
+ try{localStorage.setItem(SNAPKEY,JSON.stringify(a))}catch(x){try{localStorage.setItem(SNAPKEY,JSON.stringify(a.slice(-1)))}catch(y){}}
+}
+function updStor(){
+ const el=document.getElementById("stor");if(!el)return;
+ const f=t=>new Date(t).toLocaleDateString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+ el.innerHTML=saveFailed?"<b>Attention :</b> l’enregistrement est impossible sur cet appareil (navigation privée ?).":"Sauvegarde automatique activée"+(lastSaveT?" · dernière : <b>"+f(lastSaveT)+"</b>":"")+(persisted?" · stockage protégé":"");
+}
 const fixTotal=()=>S.charges.reduce((t,c)=>t+(+c.a||0),0);
 const base=()=>S.capital-S.epargne-fixTotal();
 const ENV={essence:/plein|carburant|essence/i,coiffeur:/coiffeur/i},NAME={essence:"Essence",coiffeur:"Coiffeur"};
@@ -219,6 +246,7 @@ function render(){
  const L={panier:"Panier",coiffeur:"Coiffeur",essence:"Essence"};
  $("hist").innerHTML=S.dep.length?S.dep.slice().reverse().map(d=>`<div class="row"><div>${L[d.type]}<small>${d.date}${envLabel(d)}</small></div><div>−${eur(d.a)}<button class="x" data-rm="${d.id}" aria-label="Supprimer">×</button></div></div>`).join(""):'<p style="color:var(--mute);font-size:14px;margin:14px 2px">Aucune dépense pour l’instant.</p>';
  $("arch").innerHTML=S.archive.length?'<h2 style="margin:22px 0 2px">Mois précédents</h2>'+S.archive.slice().reverse().map(m=>`<div class="row"><div>${esc(m.label)}<small>${m.n} dépense${m.n>1?"s":""}</small></div><div style="text-align:right">−${eur(m.spent)}<small>sur ${eur(m.base)}</small></div></div>`).join(""):"";
+ updStor();
  hint();
 }
 function hint(){
@@ -272,6 +300,7 @@ $("reset").onclick=()=>{if(!$("reset").dataset.s){$("reset").dataset.s=1;$("rese
 addEventListener("pagehide",save);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save()});
 render();show("dep");
+if(restoredFrom){const f=new Date(restoredFrom).toLocaleDateString("fr-FR",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});$("note").innerHTML=`<span>Données restaurées depuis la copie du ${f}</span><button id="noteb">OK</button>`;$("note").hidden=false;$("note").onclick=e=>{if(e.target.id==="noteb")$("note").hidden=true};save()}
 </script>
 </body>
 </html>
